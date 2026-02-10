@@ -187,15 +187,15 @@ This would allow agents to understand, before beginning work, that a project req
 
 | Capability | Env Vars | HashiCorp Vault | AWS SM | 1Password SDK | CyberArk | LEASH |
 |-----------|----------|----------------|--------|--------------|----------|-------|
-| Agent never sees secret | | | | | | :white_check_mark: |
-| Per-request human approval | | | | | | :white_check_mark: |
-| Action execution pattern | | | | | | :white_check_mark: |
-| MCP-native interface | | | | | | :white_check_mark: |
-| Platform-bound credentials | | | | | :white_check_mark: | :white_check_mark: |
-| Owner-controlled contracts | | | | Partial | :white_check_mark: | :white_check_mark: |
-| Instant revocation | | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Three-layer audit trail | | | | | Partial | :white_check_mark: |
-| No caching / zero storage | | | | | | :white_check_mark: |
+| Agent never sees secret | :x: | :x: | :x: | :x: | :x: | :white_check_mark: |
+| Per-request human approval | :x: | :x: | :x: | :x: | :x: | :white_check_mark: |
+| Action execution pattern | :x: | :x: | :x: | :x: | :x: | :white_check_mark: |
+| MCP-native interface | :x: | :x: | :x: | :x: | :x: | :white_check_mark: |
+| Platform-bound credentials | :x: | :x: | :x: | :x: | :white_check_mark: | :white_check_mark: |
+| Owner-controlled contracts | :x: | :x: | :x: | Partial | :white_check_mark: | :white_check_mark: |
+| Instant revocation | :x: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Three-layer audit trail | :x: | :x: | :x: | :x: | Partial | :white_check_mark: |
+| No caching / zero storage | :x: | :x: | :x: | :x: | :x: | :white_check_mark: |
 
 The critical differentiator is the action execution pattern. Every existing approach ultimately delivers the plaintext secret to the requesting application. LEASH's action execution enables a fundamentally different security model where the secret is used but never exposed. This eliminates the entire class of vulnerabilities associated with secrets in agent memory, context windows, and logs.
 

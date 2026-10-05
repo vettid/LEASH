@@ -254,3 +254,7 @@ The agentic AI ecosystem is moving from experimentation to production. MCP solve
 | **Action Execution** | A pattern where the vault performs an operation using a secret on the agent's behalf, returning only the result. The agent never receives the secret. |
 | **Platform Binding** | The practice of encrypting Connector credentials using machine-specific attributes so they cannot be used on another machine. |
 | **Enrollment** | The one-time process by which an agent's Connector is registered with a vault and the owner defines its Connection Contract. |
+
+## License
+
+Copyright © 2026 The VettID Project. This paper is licensed under the [Creative Commons Attribution 4.0 International License](LICENSE) (CC BY 4.0).

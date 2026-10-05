@@ -7,13 +7,14 @@ A position paper proposing a companion security model for agent tool use
 | | |
 |---|---|
 | **Status** | Draft position paper, being prepared for submission to the Agentic AI Foundation (AAIF). Not yet submitted. |
+| **Author** | Al Liebl <al@vettid.org> |
 | **Date** | October 2026 |
 | **Version** | 1.1 (draft) |
 | **Category** | Security / Secrets Management |
 | **Target** | Agentic AI Foundation (AAIF) |
-| **License** | [CC BY 4.0](LICENSE) |
+| **License** | This paper: [CC BY 4.0](LICENSE). A future LEASH specification: Apache-2.0 (intended). |
 
-> **Status.** This is a position paper, not a finished standard. It is being prepared for submission to the Agentic AI Foundation (AAIF), the foundation under the Linux Foundation that hosts MCP, goose and AGENTS.md [1]. It has not been submitted or accepted. Comments are welcome as issues on this repository.
+> **Status.** This is a position paper, not a finished standard. It is being prepared for submission to the Agentic AI Foundation (AAIF), the foundation under the Linux Foundation that hosts MCP, goose and AGENTS.md [1]. It has not been submitted or accepted. The next step is to present it to the AAIF's Identity & Trust and Security & Privacy working groups, planned within about a month. A formal AAIF project proposal will follow once an implementation exists, with a target of H2 2027 (§7). Comments are welcome as issues on this repository.
 
 ---
 
@@ -120,7 +121,7 @@ Before an agent can request secrets, it must be enrolled with a vault through a 
 
 1. **Owner initiates.** The secret owner generates a one-time enrollment token through their vault management interface (mobile app, web console, or CLI).
 2. **Connector registers.** The operator installs the LEASH Connector and presents the enrollment token. The Connector generates a key pair, collects machine attestation data (binary fingerprint, platform identifiers), and sends a registration request to the vault.
-3. **Owner reviews and approves.** The owner receives the registration details and defines a Connection Contract: which categories of secrets the agent may access, the approval mode (per-request, automatic within contract, or automatic for all), and rate limits.
+3. **Owner reviews and approves.** The owner receives the registration details and defines a Connection Contract: which categories of secrets the agent may access, the approval mode (per-request or automatic within contract), and rate limits.
 4. **Connection activates.** The vault and Connector complete key exchange. The Connector stores encrypted connection credentials bound to the specific machine's platform key. Credentials are undecryptable on any other machine.
 
 Enrollment tokens MUST be single-use, time-limited (recommended: 2 minutes), and delivered over TLS. The enrollment flow MUST NOT require the owner to pre-configure permissions before seeing the actual agent's attestation data.
@@ -132,7 +133,7 @@ The Connection Contract is the central governance mechanism in LEASH. Defined by
 | Contract Field | Description |
 |---------------|-------------|
 | Secret Scope | Categories of secrets the agent may access (e.g., API keys, SSH keys, database credentials, payment/financial). Fine-grained scoping to individual secrets is optional. |
-| Approval Mode | Per-request (owner approves each access), automatic within contract (pre-approved for in-scope secrets), or automatic for all (no restrictions). Defaults to per-request. |
+| Approval Mode | Per-request (owner approves each access) or automatic within contract (pre-approved for in-scope secrets, within the rate limits). Defaults to per-request. There is no unrestricted mode: every grant has a scope. |
 | Rate Limits | Maximum requests per hour and per day. Exceeding limits triggers automatic suspension and owner notification. |
 | Action Permissions | Whether the agent may use action execution, and if so, which target domains/endpoints are permitted. |
 | Expiry | Optional contract duration after which the connection must be re-approved. |
@@ -318,28 +319,30 @@ Implementations using OS-level keystores (macOS Keychain, Windows DPAPI, Linux S
 
 A LEASH-compliant implementation MUST declare its tier and the associated security properties. Clients MAY use tier information to make informed decisions about which secrets to access through which vault.
 
-An implementation of the vault side, including a verifier for the formats in §3.5, is in development; its status is documented [separately](https://github.com/vettid/vettid.org/blob/master/docs/LEASH-IMPLEMENTATION.md).
+A reference implementation of the vault side, including a verifier for delegations and status statements, is in development and is being aligned to the formats in §3.5; its status is documented [separately](https://github.com/vettid/vettid.org/blob/master/docs/LEASH-IMPLEMENTATION.md).
 
 ## 7. Proposal and Roadmap
 
 We propose LEASH as a candidate project for the Agentic AI Foundation. This paper is being prepared for submission. None of the work below has started under the AAIF, and the dates are targets.
 
-AAIF project proposals are reviewed by the foundation's Technical Committee. A proposal must, among other things, name an OSI-approved permissive license, a public contribution process for specifications, and the project's maintainers [32]. In September 2026 the AAIF added a Sandbox stage for early projects with "a working implementation plus either early external interest or a credible thesis" [33]. LEASH does not meet these requirements yet, so the roadmap starts with review.
+AAIF project proposals are reviewed by the foundation's Technical Committee. A proposal must, among other things, name an OSI-approved permissive license, a public contribution process for specifications, and the project's maintainers [32]. In September 2026 the AAIF added a Sandbox stage for early projects with "a working implementation plus either early external interest or a credible thesis" [33]. LEASH does not meet these requirements yet. The near-term step is therefore to present this paper to the AAIF's Identity & Trust and Security & Privacy working groups, within about a month. A formal project proposal follows once an implementation exists (Phase 2, H2 2027).
+
+This paper is licensed under CC BY 4.0. A future LEASH specification is intended to be licensed under Apache-2.0, as MCP's specifications are.
 
 ### Phase 0: Review (Q4 2026)
 
 - Publish this position paper and invite comments as issues on this repository.
-- Present it to the AAIF Identity & Trust and Security & Privacy working groups [27][28].
+- Present it to the AAIF Identity & Trust and Security & Privacy working groups [27][28], within about a month.
 
 ### Phase 1: Specification (Q1–Q2 2027)
 
 - Turn §3 into a draft specification: the MCP profile (tool schemas and how delegations are carried), the Connection Contract and audit log schemas, and the delegation and status formats of §3.5 with test vectors.
-- Publish a LEASH Connector reference implementation and conformance tests for vault implementations, under an OSI-approved license.
+- Publish a LEASH Connector reference implementation and conformance tests for vault implementations, under an OSI-approved license. The specification itself is intended to be licensed under Apache-2.0.
 - Seek a second, independent vault implementation.
 
 ### Phase 2: Proposal and Ecosystem Integration (H2 2027)
 
-- Propose LEASH as an AAIF project, at the stage the Technical Committee judges appropriate [32][33].
+- Once an implementation exists, submit a formal AAIF project proposal, at the stage the Technical Committee judges appropriate [32][33].
 - Develop LEASH Connector packages for agent frameworks, starting with goose.
 - Publish an AGENTS.md convention for declaring LEASH requirements in project repositories.
 - Engage secrets management vendors to implement LEASH-compliant vault interfaces.
@@ -409,4 +412,6 @@ Web sources were checked on 2026-10-05.
 
 ## License
 
-Copyright © 2026 The VettID Project. This paper is licensed under the [Creative Commons Attribution 4.0 International License](LICENSE) (CC BY 4.0).
+Copyright © 2026 The VettID Project. Author: Al Liebl <al@vettid.org>.
+
+This paper is licensed under the [Creative Commons Attribution 4.0 International License](LICENSE) (CC BY 4.0). A future LEASH specification derived from it is intended to be licensed under the Apache License 2.0, matching the practice for MCP's specifications.

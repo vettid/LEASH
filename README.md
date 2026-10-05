@@ -207,7 +207,7 @@ LEASH is designed to be implementable across a spectrum of vault architectures, 
 
 Implementations using hardware trusted execution environments (AWS Nitro Enclaves, IBM Hyper Protect Secure Execution, Intel SGX/TDX, ARM CCA) for vault operations. Secrets are decrypted and used only within the enclave. Action execution occurs entirely within the hardware trust boundary. This tier provides the strongest security guarantee: even the vault operator cannot access secrets.
 
-Example: VettID's zero-knowledge vault architecture uses AWS Nitro Enclaves for vault computation and NATS messaging for encrypted communication, with mobile app-based owner approval.
+Example: VettID's vault (in development) runs each member's vault inside an AWS Nitro Enclave. The vault talks to the owner's mobile app and to agents only through end-to-end-encrypted mailboxes on a relay that stores ciphertext it cannot read, and owner approval happens in the mobile app. See Appendix B.
 
 ### Tier 2: Encrypted Cloud Vaults
 
@@ -256,3 +256,26 @@ The agentic AI ecosystem is moving from experimentation to production. MCP solve
 | **Action Execution** | A pattern where the vault performs an operation using a secret on the agent's behalf, returning only the result. The agent never receives the secret. |
 | **Platform Binding** | The practice of encrypting Connector credentials using machine-specific attributes so they cannot be used on another machine. |
 | **Enrollment** | The one-time process by which an agent's Connector is registered with a vault and the owner defines its Connection Contract. |
+
+## Appendix B: Implementation Status (VettID)
+
+VettID's vault is one LEASH implementation. It is in development and not yet in production. Its normative specification is [VAULT-MESSAGING](https://github.com/vettid/vettid.org/blob/master/docs/VAULT-MESSAGING.md) (version 0.10.8, draft). Section 10.11 of that document maps this paper's terms onto the vault. The code is in [vettid/vettid-vault](https://github.com/vettid/vettid-vault). Section numbers below refer to VAULT-MESSAGING.
+
+| This paper | VettID's vault |
+|-----------|----------------|
+| Implementation tier (§6) | Tier 1: each member's vault runs as its own process inside an AWS Nitro Enclave. |
+| Encrypted channel (§3.4) | The vault and the agent exchange end-to-end-encrypted messages through mailboxes on a relay ([RELAY-PROTOCOL](https://github.com/vettid/vettid.org/blob/master/docs/RELAY-PROTOCOL.md) 0.6.0, `relay.vettid.org`) that stores only ciphertext. Sessions use epochs and rekeys (§6). |
+| Enrollment (§3.1) | Agent pairing (§6.7): the owner's app shows a QR code that is valid for 10 minutes. The owner compares a committed short authentication string (§6.3) and approves in the app. |
+| Connection Contract (§3.2) | The agent's grants. Each grant is a delegation signed with the owner's credential key, which is held in the owner's Protean Credential, so the owner must be present to issue one (§10.11, §3.5). The approval mode is per grant: `ask` (the default) or `auto`, within per-hour and per-day limits. "Automatic for all" is not offered. |
+| Access window | Besides its grants, an agent acts only within a time-limited access session that the owner's app grants: 60 seconds to 24 hours, 1 hour by default (§6.8). |
+| Revocation (§3.4) | Revoking a grant takes effect in the vault at once. For relying parties outside the vault, the vault signs short-lived status statements that the agent staples to its delegation. A statement lives 60 seconds to 1 hour, 15 minutes by default (§10.11). |
+| Pattern 1: retrieval (§2.3) | `agent.request{op: "item.get"}` on the items the owner has shared with the agent (§10.11, §10.12). |
+| Pattern 2: action execution (§2.3) | `agent.request{op: "item.use"}`, currently limited to HMAC-SHA-256 keyed with a stored value. The HTTP action, in which the vault makes a request with an injected secret, is not offered yet because it needs egress from the enclave beyond the relay (§10.11, §15 item 7). |
+| Secret scope | Critical items, VettID's highest sensitivity class, are never reachable by agents (§10.11). |
+| Rate limits and suspension (§3.2) | Per-grant hourly and daily limits, a cooldown after each refusal, at most 20 referrals to the owner per agent per hour, and suspension after 30 refusals within an hour (§10.11). |
+| Audit logging (§3.4) | A hash-chained audit log with `leash.*` entry kinds (§10.9, §10.11). |
+| Platform binding and binary attestation (§3.4) | Left to the agent's connector; outside the vault's scope (§10.11). |
+
+**Cryptography** (§4.1). Key exchange and sealing use HPKE (RFC 9180) with the hybrid post-quantum KEM ML-KEM-768 + X25519 (X-Wing style). Encryption uses ChaCha20-Poly1305 and XChaCha20-Poly1305, and key derivation uses HKDF-SHA-256. Keys derived from a PIN or password use Argon2id. Signatures, including the signatures on LEASH delegations and status statements, are Ed25519. They are classical, not post-quantum. A hybrid Ed25519 + ML-DSA-65 suite is reserved for a later phase.
+
+**Connector.** VettID has not yet rebuilt its agent-side connector on this design. The public [vettid/vettid-agent](https://github.com/vettid/vettid-agent) repository holds the connector from VettID's first implementation, which used vettid.dev and NATS messaging. That connector exposes a local REST and WebSocket API rather than an MCP server, and it does not work with the current vault.
